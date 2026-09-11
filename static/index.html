@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anime Frame Search</title>
+  <style>
+    :root { --bg:#0f0a1a; --card:#1a1230; --accent:#ff4ecd; --accent2:#5ce1ff; --text:#f4eefc; --muted:#a89bbf; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, sans-serif; background: radial-gradient(900px 500px at 20% 0%, #2a1450, var(--bg)); color:var(--text); }
+    main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; }
+    h1 { margin:0; font-size:1.9rem; background: linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .sub { color:var(--muted); margin:8px 0 22px; }
+    .panel { background:var(--card); border:1px solid #3b2a66; border-radius:14px; padding:16px; display:grid; gap:10px; }
+    input[type=text] { width:100%; padding:12px 14px; border-radius:10px; border:1px solid #4c3a78; background:#120b22; color:var(--text); }
+    button { background: linear-gradient(90deg,#ff4ecd,#7c5cff); border:none; color:white; font-weight:700; padding:11px 16px; border-radius:10px; cursor:pointer; }
+    .results { display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-top:18px; }
+    .card { background:#140c28; border:1px solid #3b2a66; border-radius:12px; overflow:hidden; }
+    .card img { width:100%; display:block; aspect-ratio: 16/9; object-fit:cover; }
+    .meta { padding:10px 12px 14px; }
+    .meta strong { display:block; margin-bottom:4px; }
+    .score { color:var(--accent2); font-size:0.85rem; }
+    .caption { color:var(--muted); font-size:0.85rem; margin-top:6px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Anime Frame Search</h1>
+  <p class="sub">Multimodal retrieval over <em>synthetic CC0</em> anime-style short-clip frames (CLIP / hash embedder).</p>
+  <div class="panel">
+    <input id="q" type="text" placeholder="e.g. neon city night rain, cherry blossom train, snow shrine…" />
+    <button id="go">Search</button>
+  </div>
+  <div id="out" class="results"></div>
+</main>
+<script>
+async function run() {
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  const res = await fetch('/api/search/text?q=' + encodeURIComponent(q) + '&top_k=8');
+  const data = await res.json();
+  const out = document.getElementById('out');
+  out.innerHTML = data.results.map(r => `
+    <article class="card">
+      <img src="/frames/${r.path}" alt="${r.title}" />
+      <div class="meta">
+        <strong>${r.title}</strong>
+        <div class="score">score ${r.score.toFixed(3)}</div>
+        <div class="caption">${r.caption}</div>
+      </div>
+    </article>`).join('');
+}
+document.getElementById('go').onclick = run;
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+</script>
+</body>
+</html>
